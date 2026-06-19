@@ -1,15 +1,40 @@
-import pandas as pd
+name: Generate HTML Table
 
-try:
-    # This reads the Excel file directly, so you don't have to convert it to CSV first!
-    df = pd.read_excel('schedule.xlsx')
-    
-    # Convert it to HTML
-    html_table = df.to_html(index=False)
-    
-    # Save the output to table.html
-    with open("table.html", "w") as f:
-        f.write(html_table)
-    print("Successfully generated table.html from schedule.xlsx!")
-except Exception as e:
-    print(f"Error: {e}")
+# This triggers the workflow every time you push changes to your repository
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  run-python-script:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Check out the files in your repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Step 2: Set up a Python environment on the runner
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      # Step 3: Install necessary libraries (like Pandas)
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pandas openpyxl
+
+      # Step 4: Run your script to generate 'table.html'
+      - name: Run Python script
+        run: python convert.py
+
+      # Step 5: (Optional) Auto-commit the newly generated table.html back to your repository
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add table.html
+          git diff-index --quiet HEAD || (git commit -m "Auto-update HTML table" && git push)
